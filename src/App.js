@@ -1,81 +1,95 @@
+// App.js - Versión lista para producción (Vite + Vercel + Render)
 import React, { useState } from 'react';
-import './App.css';
-import logo from './logo_riesgos.png'; // Asegúrate de tener esta imagen en `src`
-import logoEmpresa from './logo_riesgos.png';
 
+// Usar variable de entorno definida en Vercel
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 function App() {
   const [pregunta, setPregunta] = useState('');
   const [respuesta, setRespuesta] = useState('');
   const [fuentes, setFuentes] = useState([]);
-  const [cargando, setCargando] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleConsulta = async () => {
+  const handleClick = async () => {
     if (!pregunta.trim()) return;
 
-    setCargando(true);
-    setRespuesta('');
-    setFuentes([]);
-
+    setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/preguntar', {
+      const response = await fetch(`${API_URL}/preguntar`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ texto: pregunta }),
       });
 
-      if (!res.ok) throw new Error('Error al consultar');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      const data = await res.json();
-      setRespuesta(data.respuesta || 'No se obtuvo respuesta');
+      const data = await response.json();
+      setRespuesta(data.respuesta);
       setFuentes(data.fuentes || []);
     } catch (error) {
-      console.error(error);
-      setRespuesta('❌ Error al consultar el backend.');
+      console.error('Error:', error);
+      setRespuesta(
+        'Error al conectar con el servidor. Verifica que el backend esté funcionando.'
+      );
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="app-container">
-      <header className="header">
-        <img src={logo} alt="Logo de riesgos" className="logo" />
-        <h1>
-  <img src={logoEmpresa} alt="Logo Vertech" className="logo" />
-  Asistente de Riesgos
-</h1>
-
-      </header>
+    <div className="App" style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ color: '#222' }}>RAG Riesgos</h1>
 
       <textarea
-        placeholder="Ej: nivel del riesgo de unas manzanas frescas chilenas de 40000 dólares"
-        rows="4"
         value={pregunta}
         onChange={(e) => setPregunta(e.target.value)}
+        placeholder="Escribe tu pregunta aquí..."
+        rows="4"
+        cols="60"
+        style={{
+          padding: '10px',
+          fontSize: '1rem',
+          width: '100%',
+          maxWidth: '600px',
+          marginBottom: '10px',
+        }}
       />
-
-      <button onClick={handleConsulta} disabled={cargando}>
-        {cargando ? 'Consultando...' : 'Consultar'}
+      <br />
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        style={{
+          padding: '10px 20px',
+          fontSize: '1rem',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        {loading ? 'Procesando...' : 'Preguntar'}
       </button>
 
-      <div className="respuesta">
-        <h3>🧠 Respuesta:</h3>
-        <p>{respuesta}</p>
-      </div>
+      {respuesta && (
+        <div style={{ marginTop: '2rem' }}>
+          <h3>Respuesta:</h3>
+          <p>{respuesta}</p>
 
-      {fuentes.length > 0 && (
-        <div className="fuentes">
-          <h3>📚 Fuentes consultadas:</h3>
-          <ul>
-            {fuentes.map((f, i) => (
-              <li key={i}>
-                {typeof f === 'string'
-                  ? f.slice(0, 200) + '...'
-                  : 'Documento sin texto legible'}
-              </li>
-            ))}
-          </ul>
+          {fuentes.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <h4>Fuentes:</h4>
+              <ul>
+                {fuentes.map((fuente, index) => (
+                  <li key={index}>{fuente}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -83,4 +97,4 @@ function App() {
 }
 
 export default App;
-
+// Este comentario fuerza un redeploy en Vercel
