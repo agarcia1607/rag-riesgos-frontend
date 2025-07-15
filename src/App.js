@@ -1,8 +1,8 @@
-// App.js - Versión lista para producción (Vite + Vercel + Render)
+// App.js - Compatible con Create React App (CRA)
 import React, { useState } from 'react';
 
-// Usar variable de entorno definida en Vercel
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+// Usar variable de entorno correcta para CRA
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 function App() {
   const [pregunta, setPregunta] = useState('');
@@ -97,4 +97,3 @@ function App() {
 }
 
 export default App;
-// Este comentario fuerza un redeploy en Vercel
